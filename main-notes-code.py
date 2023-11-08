@@ -12,7 +12,6 @@ my_db = mysql.connector.connect(
 
 my_cursor = my_db.cursor()
 
-
 class Note:
     def __init__(self, note_number, title, date, info):
         self.note_number = note_number
@@ -22,10 +21,7 @@ class Note:
 
 
 class MainNotesGUI:
-    def __init__(self, root_width, root_height):
-
-        self.root_width = root_width
-        self.root_height = root_height
+    def __init__(self):
 
         self.notes = []
 
@@ -47,15 +43,57 @@ class MainNotesGUI:
 
         self.root = tk.Tk()
 
-        self.open_main_ui()
+        self.root.geometry("800x700")
+
+        try:
+            with open("notesPassword.txt", 'r') as file:
+                password = file.readline()
+
+                if password == "":
+                    self.create_password()
+                else:
+                    self.check_pw(password)
+
+        except FileNotFoundError as error:
+            with open("notesPassword.txt", 'w') as file:
+                print(error)
+            self.create_password()
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         self.root.mainloop()
 
-    def open_main_ui(self):
+    def create_password(self):
+        tk.Label(text="Create your password: ").place(x=100, y=150)
+        self.pwE = tk.Entry(width=70)
+        self.pwE.place(x=250, y=150)
 
-        self.root.geometry(f"{self.root_width}x{self.root_height}")
+        createPwBtn = tk.Button(text="Create password", width=14, height=7, command=self.creat_pw_btn)
+        createPwBtn.place(x=350, y=330)
+
+    def creat_pw_btn(self):
+        with open("notesPassword.txt", 'w') as file:
+            file.write(self.pwE.get())
+
+        self.open_main_ui()
+
+    def check_pw(self, password):
+
+        self.clear_interface()
+        tk.Label(text="Enter your password: ").place(x=100, y=150)
+        self.pwE = tk.Entry(width=70)
+        self.pwE.place(x=250, y=150)
+
+        self.check_pw_button = tk.Button(text="Check password", command=lambda : self.check_pw_btn(password))
+        self.check_pw_button.place(x=300, y=350)
+
+    def check_pw_btn(self, password):
+        if self.pwE.get()==password:
+            self.open_main_ui()
+        else:
+            self.check_pw(password)
+
+    def open_main_ui(self):
 
         self.clear_interface()
 
@@ -268,4 +306,4 @@ class MainNotesGUI:
             self.open_main_ui()
 
 
-e = MainNotesGUI(800, 700)
+MainNotesGUI()
