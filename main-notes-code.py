@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import mysql.connector
+import re
 
 my_db = mysql.connector.connect(
     host="localhost",
@@ -22,6 +23,8 @@ class Note:
 
 class MainNotesGUI:
     def __init__(self):
+
+        self.date_pattern = r'^\d{4}-\d{2}-\d{2}$'
 
         self.notes = []
 
@@ -169,8 +172,16 @@ class MainNotesGUI:
 
     def on_closing(self):
         if not self.saved:
-            if messagebox.askyesno(title="Quit?", message="Do you want to quit?"):
-                self.root.destroy()
+            quit_question = messagebox.askyesnocancel(title="Save and quit?", message="Do you want to save and quit?")
+
+            if quit_question is not None:
+                if quit_question:
+                    self.save()
+                    self.root.destroy()
+                else:
+                    self.root.destroy()
+            else:
+                print("Canceled leaving")
         else:
             self.root.destroy()
 
@@ -234,6 +245,8 @@ class MainNotesGUI:
         self.dateEntry = tk.Entry(self.root, width=100)
         self.dateEntry.place(x=100, y=50)
 
+        self.dateEntry.insert(0, "yyyy-MM-DD")
+
         noteLabel = tk.Label(self.root, text="Note: ")
         noteLabel.place(x=20, y=100)
 
@@ -242,6 +255,9 @@ class MainNotesGUI:
 
         create_button = tk.Button(self.root, text="Create Note", command=self.new_note)
         create_button.place(x=350, y=660)
+
+    def is_valid_date_format(self, date_string):
+        return bool(re.match(self.date_pattern, date_string))
 
     def new_note(self):
         self.title = self.titleEntry.get()
@@ -258,13 +274,13 @@ class MainNotesGUI:
         except IndexError as error:
             print(error)
 
-        if not self.title=="" and not self.date=="":
+        if not self.title=="" and not self.date=="" and self.is_valid_date_format(self.date):
             note = Note(note_number, self.title, self.date, self.info)
             self.notes.append(note)
             self.saved = False
             self.open_main_ui()
         else:
-            messagebox.showerror(title="No Blank Spots", message="Please fill out what you didnt")
+            messagebox.showerror(title="No Blank Spots", message="Please fill out what you didnt and make sure The information is in the right syntax")
 
     def edit_note(self, position):
         self.clear_interface()
